@@ -1,67 +1,127 @@
-import { Wrench, Gauge, Droplets, Cog, Truck, type LucideIcon } from "lucide-react";
-
 export type Service = {
   id: string;
   name: string;
   description: string;
-  features: string[];
-  price: string;
+  price: number;
   duration: string;
-  icon: LucideIcon;
-  image: string;
+  icon: string;
 };
 
-const u = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
+export type MembershipTier = {
+  id: "free" | "premium";
+  name: string;
+  pricePerYear: number;
+  pricePerMonth: number;
+  color: string;
+  features: string[];
+  highlight?: boolean;
+};
 
 export const services: Service[] = [
   {
-    id: "service-berkala",
-    name: "Service Berkala",
-    description: "Perawatan rutin sesuai jadwal pabrikan untuk menjaga performa & umur mesin.",
-    features: ["Ganti oli mesin", "Cek filter & busi", "Inspeksi 30 titik", "Tune kelistrikan"],
-    price: "Mulai Rp 350.000",
-    duration: "± 90 menit",
-    icon: Wrench,
-    image: u("photo-1486006920555-c77dcf18193c"),
+    id: "svc-01",
+    name: "Ganti Oli & Filter",
+    description: "Penggantian oli mesin dan filter oli dengan produk terpilih. Termasuk pemeriksaan 10 titik kendaraan.",
+    price: 150000,
+    duration: "30 menit",
+    icon: "droplets",
   },
   {
-    id: "tune-up",
+    id: "svc-02",
+    name: "Servis AC Lengkap",
+    description: "Cuci evaporator, isi freon, bersihkan filter kabin, cek kompressor dan kondensor.",
+    price: 350000,
+    duration: "2 jam",
+    icon: "wind",
+  },
+  {
+    id: "svc-03",
     name: "Tune Up Mesin",
-    description: "Optimasi performa mesin agar respon lebih ringan & konsumsi BBM efisien.",
-    features: ["Bersihkan throttle body", "Setel idle RPM", "Cek timing", "Servis injektor"],
-    price: "Mulai Rp 550.000",
-    duration: "± 2 jam",
-    icon: Gauge,
-    image: u("photo-1632823471565-1ecdf7a02a4b"),
+    description: "Pengecekan dan penyetelan sistem pengapian, karburator/injeksi, idle, dan kelistrikan.",
+    price: 450000,
+    duration: "3 jam",
+    icon: "settings",
   },
   {
-    id: "ganti-oli",
-    name: "Ganti Oli Express",
-    description: "Penggantian oli mesin & filter dengan oli berkualitas tinggi.",
-    features: ["Oli synthetic / mineral", "Filter oli baru", "Cek level fluid lain", "Reset service indicator"],
-    price: "Mulai Rp 285.000",
-    duration: "± 30 menit",
-    icon: Droplets,
-    image: u("photo-1635770310744-c2c2469d3b81"),
+    id: "svc-04",
+    name: "Balancing & Spooring",
+    description: "Balancing semua ban dan spooring alignment roda untuk kestabilan berkendara optimal.",
+    price: 200000,
+    duration: "1 jam",
+    icon: "rotate-cw",
   },
   {
-    id: "perbaikan-mesin",
-    name: "Perbaikan Mesin",
-    description: "Diagnosa & perbaikan mesin profesional dengan scanner OBD-II modern.",
-    features: ["Diagnosa scanner", "Overhaul mesin", "Ganti timing belt", "Garansi servis"],
-    price: "Mulai Rp 1.500.000",
-    duration: "1–3 hari kerja",
-    icon: Cog,
-    image: u("photo-1597007030739-6d2e7172ee6e"),
+    id: "svc-05",
+    name: "Servis Rem",
+    description: "Pemeriksaan dan penggantian kampas rem, disc, serta bleeding minyak rem.",
+    price: 250000,
+    duration: "1.5 jam",
+    icon: "octagon",
   },
   {
-    id: "home-service",
-    name: "Home Service",
-    description: "Layanan servis di lokasi Anda — hemat waktu, tetap berkualitas bengkel.",
-    features: ["Teknisi datang ke rumah", "Peralatan lengkap", "Pembayaran setelah selesai", "Area Pekalongan & sekitar"],
-    price: "Mulai Rp 150.000 (jasa panggil)",
-    duration: "Sesuai jenis servis",
-    icon: Truck,
-    image: u("photo-1632823469850-2f77dd9c7f93"),
+    id: "svc-06",
+    name: "Cuci Mobil Premium",
+    description: "Cuci eksterior foam wash, poles bodi, vacuum interior, dan wax coating.",
+    price: 120000,
+    duration: "1.5 jam",
+    icon: "sparkles",
+  },
+  {
+    id: "svc-07",
+    name: "Modifikasi & Custom",
+    description: "Konsultasi dan pengerjaan modifikasi bodi, suspensi, velg, audio, dan eksterior.",
+    price: 0,
+    duration: "Sesuai project",
+    icon: "zap",
+  },
+  {
+    id: "svc-08",
+    name: "Pemasangan Aksesori",
+    description: "Pemasangan head unit, kamera mundur, kaca film, dashcam, dan aksesori lainnya.",
+    price: 100000,
+    duration: "1-3 jam",
+    icon: "wrench",
   },
 ];
+
+export const membershipTiers: MembershipTier[] = [
+  {
+    id: "free",
+    name: "Basic",
+    pricePerYear: 0,
+    pricePerMonth: 0,
+    color: "from-slate-600 to-slate-700",
+    features: [
+      "Booking layanan online",
+      "Riwayat servis digital",
+      "Notifikasi WhatsApp",
+      "Akses katalog produk",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Member Premium",
+    pricePerYear: 599000,
+    pricePerMonth: 55000,
+    color: "from-amber-500 to-orange-600",
+    highlight: true,
+    features: [
+      "Semua fitur Basic",
+      "Home Service (antar-jemput kendaraan)",
+      "Diskon 10% semua layanan",
+      "Prioritas antrian & booking",
+      "Kaos MAXGIC eksklusif (Rp 150.000)",
+      "Keychain Bengkel Harun (Rp 45.000)",
+      "Konsultasi mesin gratis",
+      "Garansi servis 30 hari",
+    ],
+  },
+];
+
+export function formatIDR(n: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(n);
+}

@@ -7,7 +7,7 @@ export type Booking = {
   phone: string;
   carModel: string;
   plate: string;
-  date: string; // ISO date
+  date: string;
   time: string;
   notes?: string;
   status: BookingStatus;
@@ -20,8 +20,7 @@ export function getBookings(): Booking[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as Booking[];
+    return raw ? (JSON.parse(raw) as Booking[]) : [];
   } catch {
     return [];
   }
@@ -43,12 +42,6 @@ export function saveBooking(b: Omit<Booking, "id" | "createdAt" | "status">): Bo
 
 export function deleteBooking(id: string) {
   const list = getBookings().filter((b) => b.id !== id);
-  localStorage.setItem(KEY, JSON.stringify(list));
-  window.dispatchEvent(new Event("bookings:update"));
-}
-
-export function updateStatus(id: string, status: BookingStatus) {
-  const list = getBookings().map((b) => (b.id === id ? { ...b, status } : b));
   localStorage.setItem(KEY, JSON.stringify(list));
   window.dispatchEvent(new Event("bookings:update"));
 }

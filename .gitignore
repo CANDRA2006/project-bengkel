@@ -6,27 +6,55 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-node_modules
-dist
-dist-ssr
-.output
-.vinxi
-.tanstack/**
-.nitro
-*.local
+# Dependency directories
+node_modules/
+jspm_packages/
 
-# Wrangler / Cloudflare
-.wrangler/
-.dev.vars
+# TypeScript v1 declaration files
+typings/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Local env files (SANGAT PENTING: agar API Key tidak bocor ke publik)
+.env
+.env.local
+.env.[a-zA-DR-Z]*
+.env.production
+!.env.example
+
+# Output / Build directories (Folder hasil compile lokal)
+dist/
+.output/
+
+# TanStack Start & Vinxi specific cache/build directories
+.tanstack/
+.vinxi/
+
+# Firebase cache directory
+.firebase/
+
+# Vercel deployment directory (Folder konfigurasi lokal Vercel)
+.vercel/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
-# environment
-.env
+*.sln
+*.sw?
