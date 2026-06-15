@@ -9,7 +9,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 const INITIAL: Msg = {
   role: "assistant",
   content:
-    "Halo! 👋 Saya **Harun AI**, asisten Bengkel Harun. Tanya saya soal mobil, sparepart, atau booking servis. Ada yang bisa saya bantu? 🚗🔧",
+    "Halo! Saya **Harun AI**, asisten Bengkel Harun. Tanya saya soal mobil, sparepart, atau booking servis. Ada yang bisa saya bantu?",
 };
 
 export function Chatbot() {

@@ -1,11 +1,11 @@
-import logoAsset from "@/assets/bengkel-harun-logo.png.asset.json";
 import { cn } from "@/lib/utils";
+import logoBengkel from "@/assets/logo/logo-bengkel.png";
 
 export function Logo({ className, showText = false }: { className?: string; showText?: boolean }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <img
-        src={logoAsset.url}
+        src={logoBengkel}
         alt="Bengkel Harun"
         className="h-10 w-10 object-contain drop-shadow-[0_0_12px_oklch(0.62_0.24_26/0.4)]"
       />
@@ -17,5 +17,3 @@ export function Logo({ className, showText = false }: { className?: string; show
     </div>
   );
 }
-
-export { logoAsset };

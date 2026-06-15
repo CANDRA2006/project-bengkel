@@ -1,230 +1,291 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Droplets, Wind, Settings, RotateCw, Octagon, Sparkles, Zap, Wrench,
-  Clock, ChevronRight, Phone
+  Wrench, Settings, Zap, Droplets, Wind, Shield, Star,
+  ArrowRight, ChevronRight, Clock, CheckCircle2
 } from "lucide-react";
-import { services, membershipTiers, formatIDR } from "@/lib/data/services";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { waBooking } from "@/lib/whatsapp";
-import { useAuth } from "@/hooks/useAuth";
-import type { User } from "@/lib/auth";
-import { upgradeMembership } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
-const iconMap: Record<string, React.ReactNode> = {
-  droplets: <Droplets size={20} />,
-  wind: <Wind size={20} />,
-  settings: <Settings size={20} />,
-  "rotate-cw": <RotateCw size={20} />,
-  octagon: <Octagon size={20} />,
-  sparkles: <Sparkles size={20} />,
-  zap: <Zap size={20} />,
-  wrench: <Wrench size={20} />,
-};
+const SERVICES = [
+  {
+    id: "tune-up",
+    icon: Settings,
+    title: "Tune Up Mesin",
+    tagline: "Performa Optimal",
+    description: "Perawatan menyeluruh mesin kendaraan meliputi busi, filter udara, filter bahan bakar, dan penyetelan karburator.",
+    price: "Mulai Rp 185.000",
+    duration: "2–3 jam",
+    features: ["Ganti busi", "Filter udara & BBM", "Setel idle mesin", "Test drive"],
+    popular: true,
+    gradient: "from-amber-500/20 to-orange-500/10",
+    accent: "#f59e0b",
+  },
+  {
+    id: "oil",
+    icon: Droplets,
+    title: "Ganti Oli",
+    tagline: "Pelumasan Prima",
+    description: "Penggantian oli mesin, oli transmisi, dan oli gardan dengan produk berkualitas OEM & aftermarket premium.",
+    price: "Mulai Rp 95.000",
+    duration: "30–45 menit",
+    features: ["Oli mesin premium", "Filter oli baru", "Cek level cairan", "Laporan kondisi"],
+    popular: false,
+    gradient: "from-blue-500/15 to-cyan-500/10",
+    accent: "#3b82f6",
+  },
+  {
+    id: "brakes",
+    icon: Shield,
+    title: "Servis Rem",
+    tagline: "Keamanan Berkendara",
+    description: "Pemeriksaan dan penggantian kampas rem, cakram, dan kaliper untuk keamanan berkendara yang maksimal.",
+    price: "Mulai Rp 220.000",
+    duration: "1–2 jam",
+    features: ["Inspeksi rem lengkap", "Ganti kampas rem", "Bleed minyak rem", "Test performa"],
+    popular: false,
+    gradient: "from-red-500/15 to-rose-500/10",
+    accent: "#ef4444",
+  },
+  {
+    id: "ac",
+    icon: Wind,
+    title: "Servis AC",
+    tagline: "Sejuk Sepanjang Perjalanan",
+    description: "Freon, kompressor, kondensor, dan perawatan sistem AC lengkap untuk kenyamanan berkendara.",
+    price: "Mulai Rp 150.000",
+    duration: "1–3 jam",
+    features: ["Cuci evaporator", "Isi freon R134a", "Cek kompresor", "Sterilisasi kabin"],
+    popular: false,
+    gradient: "from-cyan-500/15 to-teal-500/10",
+    accent: "#06b6d4",
+  },
+  {
+    id: "electric",
+    icon: Zap,
+    title: "Kelistrikan",
+    tagline: "Sistem Elektrik Andal",
+    description: "Diagnosa dan perbaikan sistem kelistrikan, aki, alternator, starter, dan sensor ECU kendaraan modern.",
+    price: "Mulai Rp 75.000",
+    duration: "1–4 jam",
+    features: ["Scan OBD-II", "Cek aki & alternator", "Perbaikan wiring", "Reset ECU"],
+    popular: false,
+    gradient: "from-yellow-500/15 to-amber-500/10",
+    accent: "#eab308",
+  },
+  {
+    id: "general",
+    icon: Wrench,
+    title: "Servis Umum",
+    tagline: "Perawatan Lengkap",
+    description: "Pemeriksaan berkala menyeluruh meliputi 50+ titik inspeksi kendaraan Anda dari kepala hingga kaki.",
+    price: "Mulai Rp 350.000",
+    duration: "3–5 jam",
+    features: ["50+ titik inspeksi", "Laporan digital", "Garansi 30 hari", "Pick-up & antar"],
+    popular: false,
+    gradient: "from-purple-500/15 to-violet-500/10",
+    accent: "#a855f7",
+  },
+];
 
-function ServiceCard({ svc, isPremium }: { svc: typeof services[0]; isPremium: boolean }) {
-  const price = isPremium ? Math.floor(svc.price * 0.9) : svc.price;
-  return (
-    <div className="group relative bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 hover:border-amber-500/40 hover:bg-zinc-900/80 transition-all duration-300">
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/20 transition-colors">
-          {iconMap[svc.icon]}
-        </div>
-        {svc.price > 0 && isPremium && (
-          <Badge variant="amber" className="text-[10px]">-10%</Badge>
-        )}
-      </div>
-      <h3 className="text-base font-semibold text-white mb-2">{svc.name}</h3>
-      <p className="text-sm text-zinc-400 leading-relaxed mb-4">{svc.description}</p>
-      <div className="flex items-center justify-between mt-auto">
-        <div>
-          {svc.price > 0 ? (
-            <div>
-              <p className="text-base font-bold text-amber-400">
-                {formatIDR(price)}
-              </p>
-              {isPremium && svc.price !== price && (
-                <p className="text-xs text-zinc-600 line-through">{formatIDR(svc.price)}</p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-zinc-400">Konsultasi dulu</p>
-          )}
-          <div className="flex items-center gap-1 text-xs text-zinc-500 mt-1">
-            <Clock size={11} />
-            <span>{svc.duration}</span>
-          </div>
-        </div>
-        <a
-          href={waBooking(svc.name)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-medium transition-colors"
-        >
-          <Phone size={12} />
-          Booking
-        </a>
-      </div>
-    </div>
-  );
-}
+function ServiceCard({
+  service,
+  index,
+}: {
+  service: (typeof SERVICES)[0];
+  index: number;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
-function MembershipCard({ tier, user, onUpgrade }: { tier: typeof membershipTiers[0]; user: User | null; onUpgrade: () => void }) {
-  const isCurrent = user?.membershipTier === tier.id;
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const Icon = service.icon;
+
   return (
     <div
-      className={`relative rounded-2xl p-8 flex flex-col gap-6 transition-all duration-300 ${
-        tier.highlight
-          ? "bg-gradient-to-b from-zinc-900 to-zinc-900 border-2 border-amber-500 shadow-2xl shadow-amber-500/10"
-          : "bg-zinc-900/60 border border-zinc-800"
-      }`}
+      ref={cardRef}
+      className={cn(
+        "group relative flex flex-col rounded-2xl border bg-[#0f0f11] overflow-hidden cursor-pointer transition-all duration-500",
+        hovered ? "border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.5)]" : "border-white/[0.07]",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      )}
+      style={{ transitionDelay: `${index * 80}ms` }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {tier.highlight && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span className="bg-amber-500 text-black text-xs font-bold px-4 py-1 rounded-full shadow-lg">
-            Paling Populer
-          </span>
+      {/* Top gradient accent */}
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 h-[180px] bg-gradient-to-b opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
+          service.gradient
+        )}
+      />
+
+      {/* Popular badge */}
+      {service.popular && (
+        <div className="absolute top-4 right-4 z-10">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500 text-[10.5px] font-bold text-[#0a0a0a] shadow-[0_4px_12px_rgba(245,158,11,0.4)]">
+            <Star size={8} fill="currentColor" /> TERPOPULER
+          </div>
         </div>
       )}
 
-      <div>
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tier.color} flex items-center justify-center mb-4 shadow-lg`}>
-          <Zap size={22} className="text-white" />
+      {/* Glow border on hover */}
+      <div
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{
+          boxShadow: `inset 0 0 0 1px ${service.accent}22`,
+        }}
+      />
+
+      <div className="relative z-10 flex flex-col flex-1 p-6">
+        {/* Icon */}
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+          style={{
+            background: `${service.accent}18`,
+            border: `1px solid ${service.accent}25`,
+          }}
+        >
+          <Icon size={20} style={{ color: service.accent }} strokeWidth={1.8} />
         </div>
-        <h3 className="text-xl font-bold text-white">{tier.name}</h3>
-        <div className="mt-2">
-          {tier.pricePerYear === 0 ? (
-            <p className="text-3xl font-black text-white">Gratis</p>
-          ) : (
-            <div>
-              <p className="text-3xl font-black text-amber-400">
-                {formatIDR(tier.pricePerYear)}
-                <span className="text-base font-normal text-zinc-400"> /tahun</span>
-              </p>
-              <p className="text-sm text-zinc-500 mt-1">atau {formatIDR(tier.pricePerMonth)}/bulan</p>
-              <p className="text-xs text-emerald-400 mt-1.5">
-                Hemat {formatIDR(tier.pricePerMonth * 12 - tier.pricePerYear)} vs bulanan
-              </p>
-            </div>
-          )}
+
+        {/* Header */}
+        <div className="mb-3">
+          <p className="text-[10.5px] font-semibold uppercase tracking-widest mb-1" style={{ color: service.accent }}>
+            {service.tagline}
+          </p>
+          <h3 className="text-[17px] font-bold text-white font-display leading-tight">{service.title}</h3>
+        </div>
+
+        {/* Description */}
+        <p className="text-[13.5px] text-zinc-500 leading-relaxed mb-5 flex-1">{service.description}</p>
+
+        {/* Features */}
+        <ul className="space-y-1.5 mb-5">
+          {service.features.map((f) => (
+            <li key={f} className="flex items-center gap-2 text-[12.5px] text-zinc-400">
+              <CheckCircle2 size={12} className="flex-shrink-0" style={{ color: service.accent }} />
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        {/* Footer */}
+        <div className="flex items-end justify-between pt-4 border-t border-white/[0.06]">
+          <div>
+            <p className="text-[12px] text-zinc-600 mb-0.5">Harga estimasi</p>
+            <p className="text-[14px] font-bold text-white font-display">{service.price}</p>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11.5px] text-zinc-600">
+            <Clock size={11} />
+            {service.duration}
+          </div>
         </div>
       </div>
 
-      <ul className="space-y-3 flex-1">
-        {tier.features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5 text-sm">
-            <ChevronRight size={15} className={`mt-0.5 shrink-0 ${tier.highlight ? "text-amber-400" : "text-zinc-500"}`} />
-            <span className="text-zinc-300">{f}</span>
-          </li>
-        ))}
-      </ul>
-
-      {tier.id === "free" ? (
-        <Button variant="secondary" size="lg" className="w-full" disabled>
-          {isCurrent ? "Paket Aktif" : "Mulai Gratis"}
-        </Button>
-      ) : isCurrent ? (
-        <Button size="lg" className="w-full" disabled>
-          Member Aktif
-        </Button>
-      ) : (
-        <Button size="lg" className="w-full" onClick={onUpgrade}>
-          {user ? "Upgrade Sekarang" : "Daftar & Upgrade"}
-        </Button>
-      )}
+      {/* Bottom CTA */}
+      <div className="relative z-10 px-6 pb-5">
+        <button
+          className={cn(
+            "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200",
+            "opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0",
+            "text-[#0a0a0a]"
+          )}
+          style={{ background: service.accent }}
+          onClick={() => {
+            const el = document.querySelector("#contact");
+            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
+          }}
+        >
+          Booking Layanan Ini
+          <ChevronRight size={14} />
+        </button>
+      </div>
     </div>
   );
 }
 
 export function Services() {
-  const { user } = useAuth();
-  const [upgrading, setUpgrading] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [headerVisible, setHeaderVisible] = useState(false);
 
-  const handleUpgrade = async () => {
-    if (!user) {
-      document.querySelector<HTMLButtonElement>("[data-auth-trigger]")?.click();
-      return;
-    }
-    setUpgrading(true);
-    try {
-      await upgradeMembership(user.id);
-      alert("Selamat! Akun Anda telah diupgrade ke Premium. Konfirmasi pembayaran akan dikirim via WhatsApp.");
-    } finally {
-      setUpgrading(false);
-    }
-  };
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setHeaderVisible(true); observer.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <>
-      {/* Services */}
-      <section id="services" className="py-20 lg:py-28 bg-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <Badge variant="amber" className="mb-4">Layanan</Badge>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
-              Layanan <span className="text-amber-500">Lengkap</span>
-            </h2>
-            <p className="text-zinc-400 max-w-xl mx-auto">
-              Dari servis rutin hingga modifikasi custom — semua dikerjakan oleh teknisi berpengalaman dengan spare part berkualitas.
-            </p>
-            {user?.membershipTier === "premium" && (
-              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm">
-                Harga sudah dipotong diskon 10% member
-              </div>
-            )}
-          </div>
+    <section id="services" className="py-24 md:py-32 bg-[#090909] relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-1/3 -left-32 w-[400px] h-[400px] rounded-full bg-amber-500/[0.025] blur-[100px]" />
+        <div className="absolute bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-orange-500/[0.02] blur-[80px]" />
+      </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {services.map((svc) => (
-              <ServiceCard key={svc.id} svc={svc} isPremium={user?.membershipTier === "premium"} />
-            ))}
+      <div ref={sectionRef} className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        {/* Section header */}
+        <div className={cn(
+          "text-center max-w-2xl mx-auto mb-16 transition-all duration-700",
+          headerVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        )}>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/[0.08] border border-amber-500/[0.15] text-amber-400 text-[11.5px] font-semibold tracking-widest uppercase mb-5">
+            <Wrench size={11} />
+            Layanan Kami
           </div>
+          <h2 className="font-display text-[clamp(1.9rem,4.5vw,3rem)] font-black text-white leading-tight tracking-tight mb-4">
+            Solusi Lengkap untuk{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
+              Kendaraan Anda
+            </span>
+          </h2>
+          <p className="text-[15.5px] text-zinc-500 leading-relaxed">
+            Dari perawatan rutin hingga perbaikan kompleks — kami tangani semuanya dengan standar bengkel profesional.
+          </p>
         </div>
-      </section>
 
-      {/* Membership */}
-      <section id="membership" className="py-20 lg:py-28 bg-zinc-900/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <Badge variant="premium" className="mb-4">Membership</Badge>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
-              Bergabung Jadi <span className="text-amber-500">Member Premium</span>
-            </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-              Nikmati keuntungan eksklusif: layanan home service antar-jemput kendaraan, diskon 10% semua servis, dan merchandise MAXGIC eksklusif — cukup <strong className="text-white">Rp 599.000/tahun</strong>.
-            </p>
-          </div>
-
-          {/* Merchandise highlight */}
-          <div className="mb-10 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            {[
-              { label: "Home Service", desc: "Antar-jemput kendaraan gratis", icon: "🚗" },
-              { label: "Kaos Eklusif", desc: "Gratis", icon: "👕" },
-              { label: "Keychain", desc: "Gratis", icon: "🔑" },
-            ].map((item) => (
-              <div key={item.label} className="text-center p-4 rounded-xl bg-zinc-900 border border-zinc-800">
-                <div className="text-2xl mb-2">{item.icon}</div>
-                <p className="text-sm font-semibold text-white">{item.label}</p>
-                <p className="text-xs text-zinc-400 mt-1">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {membershipTiers.map((tier) => (
-              <MembershipCard
-                key={tier.id}
-                tier={tier}
-                user={user}
-                onUpgrade={handleUpgrade}
-              />
-            ))}
-          </div>
-          {upgrading && (
-            <p className="text-center text-amber-400 text-sm mt-4">Memproses upgrade...</p>
-          )}
+        {/* Services grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {SERVICES.map((service, i) => (
+            <ServiceCard key={service.id} service={service} index={i} />
+          ))}
         </div>
-      </section>
-    </>
+
+        {/* Bottom CTA */}
+        <div className={cn(
+          "mt-12 text-center transition-all duration-700 delay-500",
+          headerVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        )}>
+          <p className="text-zinc-500 text-sm mb-4">
+            Tidak ada yang cocok? Konsultasikan kebutuhan spesifik kendaraan Anda
+          </p>
+          <button
+            onClick={() => {
+              const el = document.querySelector("#contact");
+              if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
+            }}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold text-amber-400 border border-amber-500/25 hover:bg-amber-500/08 hover:border-amber-500/40 transition-all duration-200"
+          >
+            Konsultasi Gratis <ArrowRight size={14} />
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
