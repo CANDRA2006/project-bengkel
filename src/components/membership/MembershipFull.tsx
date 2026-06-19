@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Crown, Check, Shield, Zap, Sparkles, ArrowRight, Star } from "lucide-react";
+import { Crown, Check, Shield, ArrowRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { createMembershipRequest } from "@/lib/auth";
@@ -8,14 +8,46 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 const PAYMENT_METHODS = [
-  { id: "dana", label: "DANA", emoji: "💙" },
-  { id: "ovo", label: "OVO", emoji: "💜" },
-  { id: "gopay", label: "GoPay", emoji: "💚" },
-  { id: "shopeepay", label: "ShopeePay", emoji: "🧡" },
-  { id: "bca", label: "BCA Mobile", emoji: "🏦" },
-  { id: "bri", label: "BRImo", emoji: "🏦" },
-  { id: "bni", label: "BNI Mobile", emoji: "🏦" },
-  { id: "mandiri", label: "Livin' Mandiri", emoji: "🏦" },
+  {
+    id: "dana",
+    label: "DANA",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/7/72/Logo_dana_blue.svg",
+  },
+  {
+    id: "ovo",
+    label: "OVO",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/e/eb/Logo_ovo_purple.svg",
+  },
+  {
+    id: "gopay",
+    label: "GoPay",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/8/86/Gopay_logo.svg",
+  },
+  {
+    id: "shopeepay",
+    label: "ShopeePay",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/512px-Shopee.svg.png",
+  },
+  {
+    id: "bca",
+    label: "BCA Mobile",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg",
+  },
+  {
+    id: "bri",
+    label: "BRImo",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/6/68/LOGO_BRI.png",
+  },
+  {
+    id: "bni",
+    label: "BNI Mobile",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/BNI_logo.svg/320px-BNI_logo.svg.png",
+  },
+  {
+    id: "mandiri",
+    label: "Livin' Mandiri",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Bank_Mandiri_logo_2016.svg/320px-Bank_Mandiri_logo_2016.svg.png",
+  },
 ];
 
 const TIERS = [
@@ -23,16 +55,14 @@ const TIERS = [
     id: "basic",
     name: "Basic",
     icon: Shield,
-    tagline: "Untuk pemilik kendaraan",
-    monthly: 0,
-    annual: 0,
+    tagline: "Paket yang sedang kamu pakai",
+    price: 0,
     free: true,
     color: "#71717a",
     gradient: "from-zinc-800/60 to-zinc-900/40",
     border: "border-white/[0.08]",
     features: ["Booking servis online", "Riwayat perawatan kendaraan", "Notifikasi jadwal servis", "Akses katalog produk", "Dukungan via WhatsApp"],
-    limited: ["Antrean prioritas tidak tersedia", "Tanpa diskon tambahan"],
-    cta: "Paket Aktif",
+    cta: "Sedang Dipakai",
     popular: false,
   },
   {
@@ -40,8 +70,7 @@ const TIERS = [
     name: "Premium",
     icon: Crown,
     tagline: "Pengalaman servis terbaik",
-    monthly: 89000,
-    annual: 799000,
+    price: 599000,
     free: false,
     color: "#f59e0b",
     gradient: "from-amber-500/10 to-orange-500/5",
@@ -52,30 +81,11 @@ const TIERS = [
     popular: true,
     plan: "premium" as const,
   },
-  {
-    id: "fleet",
-    name: "Fleet",
-    icon: Sparkles,
-    tagline: "Untuk armada bisnis",
-    monthly: 299000,
-    annual: 2690000,
-    free: false,
-    color: "#8b5cf6",
-    gradient: "from-violet-500/10 to-purple-500/5",
-    border: "border-violet-500/30",
-    features: ["Semua fitur Premium", "Hingga 10 kendaraan", "Account manager dedikasi", "Invoice & laporan bulanan", "SLA garansi respon 2 jam", "Diskon 25% semua layanan", "Gratis antar-jemput tanpa batas"],
-    cta: "Hubungi Sales",
-    popular: false,
-    plan: "fleet" as const,
-  },
 ];
-
-type BillingCycle = "monthly" | "annual";
 
 export function MembershipFull() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [billing, setBilling] = useState<BillingCycle>("monthly");
   const [authModal, setAuthModal] = useState(false);
   const [selectedTier, setSelectedTier] = useState<typeof TIERS[0] | null>(null);
   const [paymentModal, setPaymentModal] = useState(false);
@@ -97,13 +107,12 @@ export function MembershipFull() {
     if (!selectedPayment || !selectedTier || !user) return;
     setLoading(true);
     try {
-      const price = billing === "monthly" ? selectedTier.monthly : selectedTier.annual;
       createMembershipRequest({
         userId: user.id,
         userName: user.fullName,
         userEmail: user.email,
-        plan: selectedTier.plan as "premium" | "fleet",
-        price,
+        plan: selectedTier.plan as "premium",
+        price: selectedTier.price,
         paymentMethod: selectedPayment,
       });
       toast.success("Permintaan membership terkirim! Menunggu approval admin 👑");
@@ -118,16 +127,16 @@ export function MembershipFull() {
   };
 
   const getMembershipButton = (tier: typeof TIERS[0]) => {
-    if (tier.free) return { text: "Paket Aktif", disabled: true, cls: "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-default" };
+    if (tier.free) return { text: "Sedang Dipakai", disabled: true, cls: "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-default" };
     if (!user) return { text: tier.cta, disabled: false, cls: "bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold shadow-[0_4px_16px_rgba(245,158,11,0.25)]" };
     if (user.membershipStatus === "active") return { text: "✓ Aktif 👑", disabled: true, cls: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 cursor-default" };
     if (user.membershipStatus === "pending") return { text: "⏳ Menunggu Approval", disabled: true, cls: "bg-blue-500/10 text-blue-400 border border-blue-500/20 cursor-default" };
-    return { text: tier.cta, disabled: false, cls: tier.popular ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold shadow-[0_4px_16px_rgba(245,158,11,0.25)]" : "border border-white/[0.1] text-zinc-300 hover:bg-white/[0.05]" };
+    return { text: tier.cta, disabled: false, cls: "bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold shadow-[0_4px_16px_rgba(245,158,11,0.25)]" };
   };
 
   return (
     <section className="min-h-[calc(100vh-68px)] bg-zinc-950 px-4 sm:px-6 lg:px-8 py-16">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6">
@@ -151,25 +160,9 @@ export function MembershipFull() {
           )}
         </div>
 
-        {/* Billing toggle */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <span className={cn("text-sm font-medium", billing === "monthly" ? "text-white" : "text-zinc-500")}>Bulanan</span>
-          <button
-            onClick={() => setBilling(billing === "monthly" ? "annual" : "monthly")}
-            className={cn("relative w-12 h-6 rounded-full transition-colors duration-200", billing === "annual" ? "bg-amber-500" : "bg-zinc-700")}
-          >
-            <span className={cn("absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200", billing === "annual" && "translate-x-6")} />
-          </button>
-          <span className={cn("text-sm font-medium", billing === "annual" ? "text-white" : "text-zinc-500")}>
-            Tahunan
-            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">Hemat 25%</span>
-          </span>
-        </div>
-
         {/* Tier Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
           {TIERS.map((tier) => {
-            const price = tier.free ? 0 : billing === "monthly" ? tier.monthly : tier.annual;
             const btn = getMembershipButton(tier);
             const Icon = tier.icon;
             return (
@@ -207,8 +200,8 @@ export function MembershipFull() {
                     <p className="text-3xl font-black text-white">Gratis</p>
                   ) : (
                     <>
-                      <p className="text-3xl font-black text-white">{formatRp(price)}</p>
-                      <p className="text-xs text-zinc-500 mt-0.5">{billing === "monthly" ? "/ bulan" : "/ tahun"}</p>
+                      <p className="text-3xl font-black text-white">{formatRp(tier.price)}</p>
+                      <p className="text-xs text-zinc-500 mt-0.5">/ tahun</p>
                     </>
                   )}
                 </div>
@@ -218,12 +211,6 @@ export function MembershipFull() {
                   {tier.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-zinc-300">
                       <Check size={13} className="mt-0.5 flex-shrink-0" style={{ color: tier.color }} />
-                      {f}
-                    </li>
-                  ))}
-                  {"limited" in tier && tier.limited?.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-zinc-600 line-through">
-                      <span className="w-3 h-3 mt-0.5 flex-shrink-0 text-zinc-700">✗</span>
                       {f}
                     </li>
                   ))}
@@ -272,17 +259,35 @@ export function MembershipFull() {
           <div className="relative w-full max-w-md bg-zinc-900 border border-white/[0.08] rounded-2xl p-6 shadow-2xl animate-zoom-in-95">
             <h3 className="text-lg font-bold text-white mb-1">Beli {selectedTier.name}</h3>
             <p className="text-sm text-zinc-400 mb-5">
-              {formatRp(billing === "monthly" ? selectedTier.monthly : selectedTier.annual)} / {billing === "monthly" ? "bulan" : "tahun"} · via:
+              {formatRp(selectedTier.price)} / tahun · via:
             </p>
 
+            {/* Grid payment methods di dalam modal */}
             <div className="grid grid-cols-2 gap-2 mb-5">
               {PAYMENT_METHODS.map((m) => (
-                <button key={m.id} onClick={() => setSelectedPayment(m.label)}
-                  className={cn("flex items-center gap-2 p-2.5 rounded-xl border text-sm transition-all",
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedPayment(m.label)}
+                  className={cn(
+                    "flex items-center gap-2.5 p-2.5 rounded-xl border text-sm transition-all",
                     selectedPayment === m.label
                       ? "border-amber-500/50 bg-amber-500/10 text-white"
-                      : "border-white/[0.06] bg-zinc-800/60 text-zinc-400 hover:border-white/[0.12]")}>
-                  <span>{m.emoji}</span>
+                      : "border-white/[0.06] bg-zinc-800/60 text-zinc-400 hover:border-white/[0.12]"
+                  )}
+                >
+                  <img
+                    src={m.logo}
+                    alt={m.label}
+                    className="w-7 h-7 object-contain rounded-sm flex-shrink-0"
+                    onError={(e) => {
+                      // Fallback ke initial huruf jika logo gagal load
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                    }}
+                  />
+                  <span className="hidden w-7 h-7 rounded-sm bg-zinc-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                    {m.label[0]}
+                  </span>
                   <span className="text-xs font-medium">{m.label}</span>
                 </button>
               ))}
