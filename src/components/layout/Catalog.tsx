@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast as sonnerToast } from "sonner";
 import { Search, SlidersHorizontal, Star, ShoppingCart, Heart, X, Fuel, Gauge, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import oliShell from "@/assets/katalog/oli-shell.webp";
@@ -292,10 +294,27 @@ export function Catalog() {
     );
   };
 
+  const { addToCart: globalAddToCart, user } = useAuth();
+
   const addToCart = (product: Product) => {
-    setCartItems((prev) => [...prev, product]);
+    setCartItems((prev) => {
+      const exists = prev.find((p) => p.id === product.id);
+      return exists ? prev : [...prev, product];
+    });
     setToast(`${product.name} ditambahkan ke keranjang`);
     setTimeout(() => setToast(null), 2800);
+    // Sync with global cart
+    if (user) {
+      globalAddToCart({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        qty: 1,
+        image: product.image,
+        category: product.category,
+      });
+    }
+    sonnerToast.success(`${product.name} ditambahkan!`);
   };
 
   return (

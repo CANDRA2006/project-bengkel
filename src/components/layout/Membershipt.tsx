@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Crown, Check, Star, Zap, Shield, Gift, ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const TIERS = [
   {
@@ -87,7 +88,8 @@ const PERKS = [
 ];
 
 export function Membership() {
-  const { user, upgradeMembership } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [annual, setAnnual] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -109,8 +111,8 @@ export function Membership() {
       if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
       return;
     }
-    if (tierId === "premium" && upgradeMembership) {
-      upgradeMembership("premium");
+    if (tierId === "premium") {
+      navigate("/membership");
     }
   };
 

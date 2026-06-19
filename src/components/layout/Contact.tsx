@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 
@@ -512,7 +512,7 @@ export function Contact() {
               </div>
               <p className="text-sm font-semibold text-white mb-1">Slot Masih Tersedia</p>
               <p className="text-[12.5px] text-zinc-500 leading-relaxed">
-                Masih ada 8 slot tersedia untuk hari ini. Booking sekarang sebelum penuh.
+                Booking sekarang sebelum penuh.
               </p>
             </div>
 

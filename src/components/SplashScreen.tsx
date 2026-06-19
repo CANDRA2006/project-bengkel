@@ -1,89 +1,67 @@
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import logoAsset from "@/assets/bengkel-harun-logo.png.asset.json";
+import { Wrench } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const KEY = "bengkel-harun:splash-shown";
+interface Props {
+  onDone?: () => void;
+}
 
-export function SplashScreen() {
-  const [show, setShow] = useState(false);
+export function SplashScreen({ onDone }: Props) {
+  const [visible, setVisible] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (sessionStorage.getItem(KEY)) return;
-    setShow(true);
-    sessionStorage.setItem(KEY, "1");
-    const t = setTimeout(() => setShow(false), 2600);
-    return () => clearTimeout(t);
-  }, []);
+    const t1 = setTimeout(() => setFadeOut(true), 2000);
+    const t2 = setTimeout(() => {
+      setVisible(false);
+      onDone?.();
+    }, 2600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [onDone]);
+
+  if (!visible) return null;
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.6 } }}
-          className="fixed inset-0 z-[100] grid place-items-center overflow-hidden bg-background"
-        >
-          {/* Cinematic backdrop */}
-          <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
-          <motion.div
-            initial={{ scale: 1.4, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.35 }}
-            transition={{ duration: 1.8, ease: "easeOut" }}
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "radial-gradient(ellipse 60% 50% at 50% 50%, hsl(var(--brand)/0.4), transparent 70%)",
-            }}
-          />
-
-          {/* Sweeping light bar */}
-          <motion.div
-            initial={{ x: "-110%" }}
-            animate={{ x: "110%" }}
-            transition={{ duration: 1.6, ease: [0.65, 0, 0.35, 1] }}
-            className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12"
-          />
-
-          {/* Logo */}
-          <div className="relative flex flex-col items-center gap-6">
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0, filter: "blur(20px)" }}
-              animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
-              transition={{ duration: 1.1, ease: "easeOut" }}
-              className="relative"
-            >
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand to-accent blur-3xl opacity-50 animate-pulse" />
-              <img
-                src={logoAsset.url}
-                alt="Bengkel Harun"
-                className="relative size-32 md:size-40 object-contain drop-shadow-[0_0_30px_rgba(255,80,40,0.6)]"
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-              className="text-center"
-            >
-              <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
-                BENGKEL <span className="text-gradient-brand">HARUN</span>
-              </h1>
-              <p className="mt-2 text-xs md:text-sm uppercase tracking-[0.4em] text-muted-foreground">
-                Drive · Perform · Trust
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.4, duration: 1.8, ease: "easeInOut" }}
-              className="h-[2px] w-48 md:w-72 origin-left bg-gradient-to-r from-transparent via-brand to-transparent"
-            />
-          </div>
-        </motion.div>
+    <div
+      className={cn(
+        "fixed inset-0 z-[200] flex flex-col items-center justify-center bg-zinc-950 transition-opacity duration-600",
+        fadeOut ? "opacity-0 pointer-events-none" : "opacity-100"
       )}
-    </AnimatePresence>
+    >
+      {/* Ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/[0.06] blur-[120px] pointer-events-none" />
+
+      <div className="relative flex flex-col items-center gap-5 animate-fade-in-blur">
+        {/* Logo Icon */}
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-[0_0_60px_rgba(245,158,11,0.4)] animate-pulse-subtle">
+          <Wrench size={36} className="text-[#0a0a0a]" strokeWidth={2.5} />
+        </div>
+
+        {/* Brand Name */}
+        <div className="text-center">
+          <h1 className="text-3xl md:text-5xl font-black tracking-[-0.03em] text-white">
+            Bengkel{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
+              Harun
+            </span>
+          </h1>
+          <p className="mt-2 text-xs tracking-[0.35em] text-zinc-500 uppercase font-medium">
+            Drive · Perform · Trust
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-40 h-[2px] bg-zinc-800 rounded-full overflow-hidden mt-2">
+          <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full animate-[loading_2s_ease-in-out_forwards]" />
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes loading {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
+    </div>
   );
 }
